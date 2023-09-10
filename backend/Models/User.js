@@ -58,4 +58,4 @@ userschema.methods.matchPassword = async function (password){
 userschema.methods.generateToken = function(){
     return jwt.sign({_id:this._id},process.env.JWT_SECRET);
 }
-module.exports = moogoose.model("user", userschema);
+module.exports = moogoose.model("User", userschema);
