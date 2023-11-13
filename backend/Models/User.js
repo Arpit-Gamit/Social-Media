@@ -1,8 +1,9 @@
 const moogoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 
-const userschema = new moogoose.Schema({
+const userSchema = new moogoose.Schema({
   name: {
     type: String,
     required: [true, "Please Enter a name"],
@@ -41,9 +42,13 @@ const userschema = new moogoose.Schema({
       ref: "User",
     },
   ],
+
+  
+  resetPasswordToken: String,
+  resetPasswordExpire: Date,
 });
 
-userschema.pre("save", async function (next) {
+userSchema.pre("save", async function (next) {
  if(this.isModified("password")){
     this.password = await bcrypt.hash(this.password, 10);
  }
@@ -51,11 +56,26 @@ userschema.pre("save", async function (next) {
  next();
 });
 
-userschema.methods.matchPassword = async function (password){
+userSchema.methods.matchPassword = async function (password){
    return await bcrypt.compare(password,this.password); 
 }
 
-userschema.methods.generateToken = function(){
+userSchema.methods.generateToken = function(){
     return jwt.sign({_id:this._id},process.env.JWT_SECRET);
 }
-module.exports = moogoose.model("User", userschema);
+
+userSchema.methods.getResetPasswordToken = function () {
+  const resetToken = crypto.randomBytes(20).toString("hex");
+
+  this.resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+
+  return resetToken;
+};
+
+
+
+module.exports = moogoose.model("User", userSchema);

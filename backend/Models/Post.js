@@ -21,7 +21,7 @@ const postschema = new mongoose.Schema({
                 ref:"User",
             },
     ],
-    Comment:[
+    comments:[
         {
             user:
             {
